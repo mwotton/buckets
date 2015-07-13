@@ -15,7 +15,7 @@ data Event k a = Entries !k !a
 -- bucket :: (Hashable k, Num t, Eq t, Eq k) => t -> IO (Event k a1) -> (k -> [a1] -> IO a) -> IO ()
 
 bucket :: (Monad m, Functor m, Hashable a1, Hashable k, Eq a1, Eq k)
-          => Int -> m (Event k [a1]) -> (k -> [[a1]] -> m a) -> m ()
+          => Int -> m (Event k [a1]) -> (k -> [[a1]] -> m ()) -> m ()
 bucket maxEntries fetch dispose = go HM.empty
   where go dict = do
           res <- fetch
