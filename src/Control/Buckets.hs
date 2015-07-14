@@ -10,11 +10,7 @@ data Event k a = Entries !k !a
                | Flush
                | Quit
 
--- bucket :: (Hashable k, Num t, Monad m, Functor m, Eq t, Eq k) =>
---           t -> m (Event k a) -> (k -> [a] -> m ()) -> m ()
--- bucket :: (Hashable k, Num t, Eq t, Eq k) => t -> IO (Event k a1) -> (k -> [a1] -> IO a) -> IO ()
-
-
+dumbBucket :: Monad m => t -> m (Event t1 t2) -> (t1 -> [t2] -> m a) -> m ()
 dumbBucket _foo fetch dispose = go
   where
     go = do
@@ -25,6 +21,7 @@ dumbBucket _foo fetch dispose = go
         Entries tag entry -> do
           dispose tag [entry]
           go
+
 bucket :: (Monad m, Functor m, Hashable a1, Hashable k, Eq a1, Eq k)
           => Int -> m (Event k [a1]) -> (k -> [[a1]] -> m ()) -> m ()
 bucket maxEntries fetch dispose = go HM.empty
