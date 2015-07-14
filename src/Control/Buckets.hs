@@ -14,6 +14,17 @@ data Event k a = Entries !k !a
 --           t -> m (Event k a) -> (k -> [a] -> m ()) -> m ()
 -- bucket :: (Hashable k, Num t, Eq t, Eq k) => t -> IO (Event k a1) -> (k -> [a1] -> IO a) -> IO ()
 
+
+dumbBucket _foo fetch dispose = go
+  where
+    go = do
+      r <- fetch
+      case r of
+        Quit -> return ()
+        Flush -> go
+        Entries tag entry -> do
+          dispose tag [entry]
+          go
 bucket :: (Monad m, Functor m, Hashable a1, Hashable k, Eq a1, Eq k)
           => Int -> m (Event k [a1]) -> (k -> [[a1]] -> m ()) -> m ()
 bucket maxEntries fetch dispose = go HM.empty
@@ -29,8 +40,8 @@ bucket maxEntries fetch dispose = go HM.empty
                 Nothing -> return $ HM.insert tag (maxEntries, HS.singleton entry) dict
                 Just (n,entries) ->
                   if n <= 0
-                  then do void $ dispose tag (HS.toList entries)
-                          return (HM.insert tag (maxEntries,HS.empty) dict)
+                  then do void $ dispose tag (entry:(HS.toList entries))
+                          return (HM.delete tag dict)
                   else return $ HM.insert tag (n-(length entry),(HS.insert entry entries)) dict
               go newDict
 
